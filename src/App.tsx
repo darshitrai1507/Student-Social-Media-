@@ -14,6 +14,7 @@ import { MessagesPage } from './pages/MessagesPage';
 import { EventsPage } from './pages/EventsPage';
 import { StudentProfilePage } from './pages/StudentProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { NotesAndPYQsPage } from './pages/NotesAndPYQsPage';
 
 // Modals & Feedback
 import { CreatePostModal } from './components/modals/CreatePostModal';
@@ -45,6 +46,8 @@ export const AppContent: React.FC = () => {
         return <StudentProfilePage />;
       case 'settings':
         return <SettingsPage />;
+      case 'notes-pyqs':
+        return <NotesAndPYQsPage />;
       default:
         return <HomePage />;
     }

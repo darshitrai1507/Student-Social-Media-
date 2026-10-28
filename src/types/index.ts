@@ -281,3 +281,52 @@ export interface UserSettings {
   eventReminders: boolean;
   blockedUsers: string[];
 }
+
+export type MaterialCategory = 
+  | 'Handwritten Notes'
+  | 'PYQ'
+  | 'Lab Manual'
+  | 'Formula Sheet'
+  | 'Syllabus';
+
+export interface NoteItem {
+  id: string;
+  title: string;
+  subject: string;
+  subjectCode: string;
+  branch: BranchType | 'First Year Common' | 'All Branches';
+  semester: string; // 'Semester 1' to 'Semester 8'
+  examYear?: string; // e.g. '2025-26', 'Dec 2024 Exam'
+  category: MaterialCategory;
+  fileType: 'pdf' | 'doc' | 'zip';
+  fileSize: string;
+  uploaderName: string;
+  uploaderAvatar?: string;
+  uploaderBranch?: string;
+  uploaderYear: string;
+  uploadedAt: string;
+  downloadsCount: number;
+  likesCount: number;
+  isLiked?: boolean;
+  verifiedBySenior?: boolean;
+  verifierName?: string;
+  description: string;
+  tags: string[];
+}
+export interface StudyResource {
+  id: string;
+  communityId: string;
+  title: string;
+  description: string;
+  branch: string; 
+  semester: string; 
+  resourceType: 'NOTE' | 'PYQ' | 'SYLLABUS';
+  fileUrl: string;
+  fileName: string;
+  uploadedBy: {
+    name: string;
+    avatar: string;
+  };
+  createdAt: string;
+  downloadsCount: number;
+}

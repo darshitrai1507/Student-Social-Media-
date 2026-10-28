@@ -11,7 +11,8 @@ import {
   NotificationItem, 
   UserSettings,
   Comment,
-  RoleBadge
+  RoleBadge,
+  NoteItem
 } from '../types';
 import { 
   CURRENT_USER, 
@@ -24,13 +25,15 @@ import {
   MOCK_CONVERSATIONS, 
   MOCK_MESSAGES, 
   MOCK_NOTIFICATIONS, 
-  DEFAULT_USER_SETTINGS 
+  DEFAULT_USER_SETTINGS,
+  MOCK_NOTES_AND_PYQS
 } from '../data/mockData';
 
 export type NavTab = 
   | 'home' 
   | 'explore' 
   | 'mentorship' 
+  | 'notes-pyqs'
   | 'my-communities' 
   | 'messages' 
   | 'events' 
@@ -122,6 +125,16 @@ interface AppContextType {
   
   // Community resource upload simulator
   addCommunityResource: (communityId: string, resource: { title: string; description: string; fileType: 'pdf' | 'doc' | 'link' | 'code' | 'zip'; subject: string; semester?: string }) => void;
+
+  // Notes & PYQ Repository
+  notes: NoteItem[];
+  uploadNote: (note: Partial<NoteItem>) => void;
+  toggleLikeNote: (noteId: string) => void;
+  incrementNoteDownload: (noteId: string) => void;
+  isUploadNoteOpen: boolean;
+  setIsUploadNoteOpen: (open: boolean) => void;
+  selectedNoteForPreview: NoteItem | null;
+  setSelectedNoteForPreview: (note: NoteItem | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -413,6 +426,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     showToast('Resource uploaded to community!', 'success');
+  };
+
+  // ── Notes & PYQs state ──────────────────────────────────────────────────
+  const [notes, setNotes] = useState<NoteItem[]>(MOCK_NOTES_AND_PYQS);
+  const [isUploadNoteOpen, setIsUploadNoteOpen] = useState(false);
+  const [selectedNoteForPreview, setSelectedNoteForPreview] = useState<NoteItem | null>(null);
+
+  const toggleLikeNote = (noteId: string) => {
+    setNotes(prev =>
+      prev.map(n =>
+        n.id === noteId
+          ? { ...n, isLiked: !n.isLiked, likesCount: n.isLiked ? n.likesCount - 1 : n.likesCount + 1 }
+          : n
+      )
+    );
+  };
+
+  const incrementNoteDownload = (noteId: string) => {
+    setNotes(prev =>
+      prev.map(n => n.id === noteId ? { ...n, downloadsCount: n.downloadsCount + 1 } : n)
+    );
+    showToast('Download started!', 'info');
+  };
+
+  const uploadNote = (data: Partial<NoteItem>) => {
+    const newNote: NoteItem = {
+      id: `note-${Date.now()}`,
+      title: data.title || 'Untitled',
+      subject: data.subject || 'General',
+      subjectCode: data.subjectCode || '',
+      branch: data.branch || 'All Branches',
+      semester: data.semester || 'Semester 1',
+      category: data.category || 'Handwritten Notes',
+      description: data.description || '',
+      fileType: data.fileType || 'pdf',
+      fileSize: data.fileSize || '1 MB',
+      uploaderName: currentUser.name,
+      uploaderAvatar: currentUser.avatar,
+      uploaderBranch: currentUser.branch,
+      uploaderYear: currentUser.year || '3rd Year',
+      uploadedAt: 'Just now',
+      downloadsCount: 0,
+      likesCount: 0,
+      isLiked: false,
+      verifiedBySenior: false,
+      tags: data.tags || [],
+    };
+    setNotes(prev => [newNote, ...prev]);
+    setIsUploadNoteOpen(false);
+    showToast('Study material uploaded successfully!', 'success');
   };
 
   // Post Actions
@@ -772,7 +835,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toasts,
       showToast,
       removeToast,
-      addCommunityResource
+      addCommunityResource,
+      notes,
+      uploadNote,
+      toggleLikeNote,
+      incrementNoteDownload,
+      isUploadNoteOpen,
+      setIsUploadNoteOpen,
+      selectedNoteForPreview,
+      setSelectedNoteForPreview,
     }}>
       {children}
     </AppContext.Provider>

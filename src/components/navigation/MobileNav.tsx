@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
-import { Home, Compass, Sparkles, MessageSquare, User, Calendar } from 'lucide-react';
+import { Home, Compass, Sparkles, MessageSquare, User, Calendar, BookOpen } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const { activeTab, setActiveTab, unreadMessagesCount, mentorshipRequests, currentUser } = useApp();
@@ -23,6 +23,7 @@ export const MobileNav: React.FC = () => {
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined 
     },
     { id: 'events' as NavTab, label: 'Events', icon: Calendar },
+    { id: 'notes-pyqs' as NavTab, label: 'Notes', icon: BookOpen },
     { id: 'profile' as NavTab, label: 'Profile', icon: User },
   ];
 

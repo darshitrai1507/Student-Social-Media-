@@ -12,7 +12,8 @@ import {
   PlusCircle, 
   Sparkles,
   School,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from 'lucide-react';
 import { Avatar } from '../common/Avatar';
 import { Badge } from '../common/Badge';
@@ -39,6 +40,7 @@ export const Sidebar: React.FC = () => {
     { id: 'my-communities', label: 'My Communities', icon: Users, badge: joinedCount },
     { id: 'messages', label: 'Messages', icon: MessageSquare, badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined },
     { id: 'events', label: 'Events', icon: Calendar },
+    { id: 'notes-pyqs', label: 'Notes & PYQs', icon: BookOpen },
     { id: 'profile', label: 'My Profile', icon: UserIcon },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
