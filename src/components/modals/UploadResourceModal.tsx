@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../../supabaseClient';
 
 interface UploadResourceModalProps {
   isOpen: boolean;
@@ -19,33 +20,85 @@ export const UploadResourceModal: React.FC<UploadResourceModalProps> = ({
   const [semester, setSemester] = useState('Sem 1');
   const [resourceType, setResourceType] = useState<'NOTE' | 'PYQ'>('NOTE');
   const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !file) return;
 
-    const newResource = {
-      id: Date.now().toString(),
-      communityId,
-      title,
-      description,
-      branch,
-      semester,
-      resourceType,
-      fileUrl: URL.createObjectURL(file),
-      fileName: file.name,
-      uploadedBy: {
-        name: 'Current User',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
-      },
-      createdAt: new Date().toISOString(),
-      downloadsCount: 0,
-    };
+    try {
+      setUploading(true);
 
-    onUpload(newResource);
-    onClose();
+      // 1. Upload File to Supabase Storage Bucket
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `notes/${fileName}`;
+
+      const { error: storageError } = await supabase.storage
+        .from('study-resources')
+        .upload(filePath, file);
+
+      if (storageError) throw storageError;
+
+      // 2. Get Public Download URL of the uploaded file
+      const { data: urlData } = supabase.storage
+        .from('study-resources')
+        .getPublicUrl(filePath);
+
+      const publicFileUrl = urlData.publicUrl;
+
+      // 3. Save details into Supabase Database Table
+      const newResourcePayload = {
+        title,
+        description,
+        branch,
+        semester,
+        resource_type: resourceType,
+        file_url: publicFileUrl,
+        file_name: file.name,
+        uploaded_by_name: 'Current User',
+        uploaded_by_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
+      };
+
+      const { data, error: dbError } = await supabase
+        .from('study_resources')
+        .insert([newResourcePayload])
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // Convert format for local UI view state
+      onUpload({
+        id: data.id,
+        communityId,
+        title: data.title,
+        description: data.description,
+        branch: data.branch,
+        semester: data.semester,
+        resourceType: data.resource_type,
+        fileUrl: data.file_url,
+        fileName: data.file_name,
+        uploadedBy: {
+          name: data.uploaded_by_name,
+          avatar: data.uploaded_by_avatar,
+        },
+        createdAt: data.created_at,
+        downloadsCount: data.downloads_count,
+      });
+
+      // Reset form & close
+      setTitle('');
+      setDescription('');
+      setFile(null);
+      onClose();
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -145,15 +198,17 @@ export const UploadResourceModal: React.FC<UploadResourceModalProps> = ({
             <button
               type="button"
               onClick={onClose}
+              disabled={uploading}
               className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium"
+              disabled={uploading}
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium disabled:opacity-50"
             >
-              Upload Resource
+              {uploading ? 'Uploading...' : 'Upload Resource'}
             </button>
           </div>
         </form>
