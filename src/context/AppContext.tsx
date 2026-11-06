@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import { 
   User, 
   Community, 
@@ -48,6 +49,7 @@ export interface ToastMessage {
 
 interface AppContextType {
   currentUser: User;
+  user: User; // Dynamic alias for active authenticated user
   users: User[];
   communities: Community[];
   posts: Post[];
@@ -142,11 +144,26 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const STORAGE_PREFIX = 'studentsphere_state_v1_';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load initial states from localStorage or defaults
+  const { currentUserProfile, updateAuthProfile } = useAuth();
+
+  // Load initial states from active auth profile, localStorage, or defaults
   const [currentUser, setCurrentUser] = useState<User>(() => {
+    if (currentUserProfile) return currentUserProfile;
     const saved = localStorage.getItem(STORAGE_PREFIX + 'currentUser');
     return saved ? JSON.parse(saved) : CURRENT_USER;
   });
+
+  // Dynamically synchronize currentUser with active Supabase / Auth profile changes
+  useEffect(() => {
+    if (currentUserProfile) {
+      setCurrentUser(prev => {
+        if (prev.id !== currentUserProfile.id) {
+          return currentUserProfile;
+        }
+        return { ...prev, ...currentUserProfile };
+      });
+    }
+  }, [currentUserProfile]);
 
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem(STORAGE_PREFIX + 'users');
@@ -486,8 +503,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       authorId: currentUser.id,
       authorName: currentUser.name,
       authorAvatar: currentUser.avatar,
-      authorCollege: 'JEC',
-      authorBranch: currentUser.branch.includes('Computer Science') ? 'CSE' : currentUser.branch.slice(0, 3).toUpperCase(),
+      authorCollege: currentUser.college || 'JEC',
+      authorBranch: currentUser.branch ? (currentUser.branch.includes('Computer Science') ? 'CSE' : currentUser.branch.slice(0, 3).toUpperCase()) : 'CSE',
       authorYear: currentUser.year === 'First Year' ? '1st Year' : currentUser.year === 'Second Year' ? '2nd Year' : currentUser.year === 'Third Year' ? '3rd Year' : '4th Year',
       authorBadge: currentUser.roleBadge,
       communityId: data.communityId,
@@ -748,6 +765,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateCurrentUser = (updates: Partial<User>) => {
     setCurrentUser(prev => ({ ...prev, ...updates }));
     setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, ...updates } : u));
+    updateAuthProfile(updates);
     showToast('Profile updated successfully!', 'success');
   };
 
@@ -771,6 +789,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{
       currentUser,
+      user: currentUser,
       users,
       communities,
       posts,

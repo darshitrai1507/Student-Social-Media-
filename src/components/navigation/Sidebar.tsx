@@ -151,7 +151,7 @@ export const Sidebar: React.FC = () => {
               </span>
             </div>
             <p className="text-[11px] text-slate-500 truncate">
-              {currentUser.branch.includes('Computer Science') ? '2nd Yr CSE' : currentUser.year}
+              {currentUser.year} • {currentUser.branch}
             </p>
           </div>
           <Badge role={currentUser.roleBadge} size="xs" />

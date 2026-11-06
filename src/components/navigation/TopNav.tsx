@@ -257,12 +257,12 @@ export const TopNav: React.FC = () => {
                     {currentUser.name}
                   </p>
                   <p className="text-xs text-slate-500 mt-1 truncate">
-                    {currentUser.college}
+                    {currentUser.email || currentUser.college}
                   </p>
-                  <div className="mt-2 flex items-center gap-1.5">
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
                     <Badge role={currentUser.roleBadge} size="xs" />
                     <span className="text-[11px] text-slate-500 font-medium">
-                      2nd Year CSE
+                      {currentUser.year} • {currentUser.branch}
                     </span>
                   </div>
                 </div>

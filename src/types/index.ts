@@ -325,6 +325,7 @@ export interface StudyResource {
   fileUrl: string;
   fileName: string;
   uploadedBy: {
+    id?: string;
     name: string;
     avatar: string;
   };

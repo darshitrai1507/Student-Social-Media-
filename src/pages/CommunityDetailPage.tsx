@@ -118,8 +118,20 @@ export const CommunityDetailPage: React.FC = () => {
                     <p className="text-sm text-slate-600 mt-1 line-clamp-2">{res.description}</p>
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-                    <span className="text-xs text-slate-500">By {res.uploadedBy.name}</span>
-                    <a href={res.fileUrl} download={res.fileName} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {res.uploadedBy.avatar && (
+                        <img
+                          src={res.uploadedBy.avatar}
+                          alt={res.uploadedBy.name}
+                          className="w-5 h-5 rounded-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(res.uploadedBy.name)}&background=6366f1&color=fff&size=50`;
+                          }}
+                        />
+                      )}
+                      <span className="text-xs text-slate-500 truncate">By {res.uploadedBy.name}</span>
+                    </div>
+                    <a href={res.fileUrl} download={res.fileName} className="text-sm font-medium text-indigo-600 hover:text-indigo-500 shrink-0">
                       📥 Download ({res.downloadsCount})
                     </a>
                   </div>

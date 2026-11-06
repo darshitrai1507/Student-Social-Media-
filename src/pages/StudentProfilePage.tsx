@@ -91,7 +91,7 @@ export const StudentProfilePage: React.FC = () => {
                   {user.branch} • {user.year}
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  {user.college}
+                  {user.college}{user.email ? ` • ${user.email}` : ''}
                 </p>
               </div>
             </div>

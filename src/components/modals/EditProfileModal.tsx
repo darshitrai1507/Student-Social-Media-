@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { X, Save, Plus, Trash2, Sparkles, User, Briefcase } from 'lucide-react';
 import { ProjectItem } from '../../types';
@@ -24,6 +24,21 @@ export const EditProfileModal: React.FC = () => {
   const [newProjTitle, setNewProjTitle] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
   const [newProjTech, setNewProjTech] = useState('');
+
+  // Sync state whenever modal is opened or currentUser updates
+  useEffect(() => {
+    if (isEditProfileOpen) {
+      setName(currentUser.name);
+      setBio(currentUser.bio);
+      setAvatar(currentUser.avatar);
+      setSkills(currentUser.skills || []);
+      setInterests(currentUser.interests || []);
+      setIsMentor(currentUser.isMentor || false);
+      setMentorAvailability(currentUser.mentorAvailability || 'Available');
+      setMentorBio(currentUser.mentorBio || '');
+      setProjects(currentUser.projects || []);
+    }
+  }, [isEditProfileOpen, currentUser]);
 
   if (!isEditProfileOpen) return null;
 
