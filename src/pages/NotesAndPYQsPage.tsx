@@ -338,7 +338,7 @@ export const NotesAndPYQsPage: React.FC = () => {
 
   // ── Stats ──────────────────────────────────────────────────────────────
   const totalDownloads = notes.reduce((s, n) => s + n.downloadsCount, 0);
-  const verifiedCount  = notes.filter(n => n.isVerified).length;
+  const verifiedCount  = notes.filter(n => n.verifiedBySenior).length;
   const pyqCount       = notes.filter(n => n.category === 'PYQ').length;
 
   const hasActiveFilters = selectedBranch !== 'All Branches' || selectedSemester !== 'All Semesters' || selectedCategory !== 'All';

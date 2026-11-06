@@ -43,6 +43,7 @@ export interface User {
   id: string;
   name: string;
   username: string;
+  email?: string;
   avatar: string;
   coverImage?: string;
   college: string;

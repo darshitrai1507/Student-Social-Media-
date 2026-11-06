@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Search, 
   Bell, 
@@ -31,6 +32,8 @@ export const TopNav: React.FC = () => {
     setIsCreateCommunityOpen,
     setIsGlobalSearchOpen
   } = useApp();
+
+  const { logout } = useAuth();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -299,7 +302,7 @@ export const TopNav: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="border-t border-slate-100 pt-1 mt-1">
+                  <div className="border-t border-slate-100 pt-1 mt-1">
                   <button
                     onClick={() => {
                       setIsProfileMenuOpen(false);
@@ -311,8 +314,14 @@ export const TopNav: React.FC = () => {
                     Create a Community
                   </button>
 
-                  <div className="px-4 py-2 text-[11px] text-slate-400 border-t border-slate-100 mt-1">
-                    Demo Mode • StudentSphere Prototype
+                  <div className="border-t border-slate-100 mt-1 pt-1">
+                    <button
+                      onClick={() => { setIsProfileMenuOpen(false); logout(); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
                   </div>
                 </div>
               </div>

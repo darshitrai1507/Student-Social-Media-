@@ -80,7 +80,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, onLike, onDownload, on
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium text-slate-700 truncate">{note.uploaderName}</span>
                 {note.verifiedBySenior && (
-                  <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" title="Verified Senior" />
+                  <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />
                 )}
               </div>
               <p className="text-[10px] text-slate-400">{note.uploadedAt}</p>

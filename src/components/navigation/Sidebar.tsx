@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Home, 
   Compass, 
@@ -13,7 +14,8 @@ import {
   Sparkles,
   School,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  LogOut
 } from 'lucide-react';
 import { Avatar } from '../common/Avatar';
 import { Badge } from '../common/Badge';
@@ -29,6 +31,8 @@ export const Sidebar: React.FC = () => {
     setIsCreateCommunityOpen,
     communities
   } = useApp();
+
+  const { logout } = useAuth();
 
   const joinedCount = communities.filter(c => c.joined).length;
   const pendingRequestsCount = mentorshipRequests.filter(r => r.status === 'pending' && r.menteeId === currentUser.id).length;
@@ -152,6 +156,13 @@ export const Sidebar: React.FC = () => {
           </div>
           <Badge role={currentUser.roleBadge} size="xs" />
         </div>
+        <button
+          onClick={logout}
+          className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign Out
+        </button>
       </div>
     </aside>
   );
