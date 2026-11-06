@@ -6,7 +6,7 @@ StudentSphere is an interactive, responsive website prototype designed for colle
 
 ## 🚀 Live Demo URL
 The development server is actively running at:
-**http://localhost:5173/**
+**https://melodic-pony-553f2b.netlify.app/**
 
 ---
 
