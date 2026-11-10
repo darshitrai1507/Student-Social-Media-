@@ -8,6 +8,8 @@ StudentSphere is an interactive, responsive website prototype designed for colle
 The development server is actively running at:
 **https://melodic-pony-553f2b.netlify.app/**
 
+*Supports cross-device cloud authentication powered by Supabase.*
+
 ---
 
 ## 🌟 Core Feature Walkthrough
