@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { GraduationCap, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { GraduationCap, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, Sparkles, Database, CheckCircle, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { CloudConnectionModal } from '../components/modals/CloudConnectionModal';
 
 interface LoginPageProps {
   onGoToSignup: () => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onGoToSignup }) => {
-  const { login } = useAuth();
+  const { login, isCloudConnected, refreshCloudStatus } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,24 +51,56 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onGoToSignup }) => {
         <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
           {/* Header gradient strip */}
           <div className="bg-gradient-to-r from-indigo-600 via-brand-600 to-violet-600 p-8 text-white">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <span className="text-xl font-bold tracking-tight">StudentSphere</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Sparkles className="w-3 h-3 text-yellow-300" />
-                  <span className="text-xs text-white/70">Your Digital Campus</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <span className="text-xl font-bold tracking-tight">StudentSphere</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Sparkles className="w-3 h-3 text-yellow-300" />
+                    <span className="text-xs text-white/70">Your Digital Campus</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Cloud DB Status indicator button */}
+              <button
+                type="button"
+                onClick={() => setIsCloudModalOpen(true)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all backdrop-blur-sm ${
+                  isCloudConnected
+                    ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 hover:bg-emerald-500/30'
+                    : 'bg-white/15 text-white/90 border border-white/20 hover:bg-white/25'
+                }`}
+                title="Configure Cloud Database"
+              >
+                <Database className="w-3 h-3" />
+                <span>{isCloudConnected ? 'Cloud Active' : 'Connect Cloud'}</span>
+              </button>
             </div>
+
             <h1 className="text-2xl font-bold">Welcome back! 👋</h1>
             <p className="text-white/70 text-sm mt-1">Sign in to continue to your campus network.</p>
           </div>
 
           {/* Form */}
           <div className="p-7">
+            {/* Cross-device cloud notification if not connected */}
+            {!isCloudConnected && (
+              <div 
+                onClick={() => setIsCloudModalOpen(true)}
+                className="mb-4 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 hover:border-indigo-300 transition-all cursor-pointer flex items-center gap-2.5 group"
+              >
+                <Smartphone className="w-4 h-4 text-indigo-600 shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-xs font-semibold text-indigo-900 group-hover:text-indigo-700">Want to sign in from any device?</p>
+                  <p className="text-[11px] text-indigo-600/90">Connect free Supabase cloud database &rarr;</p>
+                </div>
+              </div>
+            )}
+
             {/* Demo banner */}
             <button
               type="button"
@@ -133,7 +167,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onGoToSignup }) => {
               {error && (
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
                   <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-red-700">{error}</p>
+                  <p className="text-xs text-red-700 leading-relaxed">{error}</p>
                 </div>
               )}
 
@@ -168,10 +202,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onGoToSignup }) => {
         </div>
 
         {/* Bottom tagline */}
-        <p className="text-center text-[11px] text-slate-400 mt-5">
-          🔒 Your data stays on your device in this prototype.
-        </p>
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={() => setIsCloudModalOpen(true)}
+            className="text-[11px] text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5"
+          >
+            <Database className="w-3 h-3" />
+            <span>Database Status: {isCloudConnected ? '🟢 Cloud Sync (Cross-Device)' : '🟡 Local Storage (Single-Device)'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Cloud Configuration Modal */}
+      <CloudConnectionModal
+        isOpen={isCloudModalOpen}
+        onClose={() => setIsCloudModalOpen(false)}
+        onConfigUpdated={() => refreshCloudStatus()}
+      />
     </div>
   );
 };

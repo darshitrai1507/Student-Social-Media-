@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
   GraduationCap, Mail, Lock, Eye, EyeOff, AlertCircle,
-  ArrowRight, ArrowLeft, User, Building2, BookOpen, Check, Sparkles
+  ArrowRight, ArrowLeft, User, Building2, BookOpen, Check, Sparkles, Database, Smartphone
 } from 'lucide-react';
 import { useAuth, SignupData } from '../context/AuthContext';
 import { BranchType, YearOfStudy } from '../types';
+import { CloudConnectionModal } from '../components/modals/CloudConnectionModal';
 
 interface SignupPageProps {
   onGoToLogin: () => void;
@@ -43,11 +44,12 @@ const POPULAR_COLLEGES = [
 type Step = 1 | 2 | 3;
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onGoToLogin }) => {
-  const { signup } = useAuth();
+  const { signup, isCloudConnected, refreshCloudStatus } = useAuth();
 
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -141,17 +143,34 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onGoToLogin }) => {
         <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 via-brand-600 to-violet-600 p-7 text-white">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <span className="text-lg font-bold tracking-tight">StudentSphere</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Sparkles className="w-3 h-3 text-yellow-300" />
-                  <span className="text-xs text-white/70">Your Digital Campus</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <span className="text-lg font-bold tracking-tight">StudentSphere</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Sparkles className="w-3 h-3 text-yellow-300" />
+                    <span className="text-xs text-white/70">Your Digital Campus</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Cloud DB Status indicator button */}
+              <button
+                type="button"
+                onClick={() => setIsCloudModalOpen(true)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all backdrop-blur-sm ${
+                  isCloudConnected
+                    ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 hover:bg-emerald-500/30'
+                    : 'bg-white/15 text-white/90 border border-white/20 hover:bg-white/25'
+                }`}
+                title="Configure Cloud Database"
+              >
+                <Database className="w-3 h-3" />
+                <span>{isCloudConnected ? 'Cloud Active' : 'Connect Cloud'}</span>
+              </button>
             </div>
             <h1 className="text-xl font-bold">Join your campus network 🎓</h1>
             <p className="text-white/70 text-sm mt-1">Create your account in 3 quick steps.</p>
@@ -470,7 +489,26 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onGoToLogin }) => {
             </p>
           </div>
         </div>
+
+        {/* Bottom tagline */}
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={() => setIsCloudModalOpen(true)}
+            className="text-[11px] text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5"
+          >
+            <Database className="w-3 h-3" />
+            <span>Database Status: {isCloudConnected ? '🟢 Cloud Sync (Cross-Device)' : '🟡 Local Storage (Single-Device)'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Cloud Configuration Modal */}
+      <CloudConnectionModal
+        isOpen={isCloudModalOpen}
+        onClose={() => setIsCloudModalOpen(false)}
+        onConfigUpdated={() => refreshCloudStatus()}
+      />
     </div>
   );
 };

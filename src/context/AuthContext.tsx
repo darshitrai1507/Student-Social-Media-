@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, BranchType, YearOfStudy, RoleBadge } from '../types';
 import { CURRENT_USER } from '../data/mockData';
-import { supabase, isSupabaseConfigured } from '../supabaseClient';
+import { supabase, isSupabaseConfigured, getSupabaseConfig } from '../supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -15,6 +15,7 @@ export interface AuthUser {
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isCloudConnected: boolean;
   authUser: AuthUser | null;
   currentUserProfile: User | null;
   user: User | null; // Convenient alias for currentUserProfile
@@ -22,6 +23,7 @@ interface AuthContextType {
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateAuthProfile: (updates: Partial<User>) => void;
+  refreshCloudStatus: () => boolean;
 }
 
 export interface SignupData {
@@ -129,6 +131,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authUser, setAuthUser] = useState<AuthUser | null>(getStoredSession);
+  const [isCloudConnected, setIsCloudConnected] = useState<boolean>(() => getSupabaseConfig().isConfigured);
+
+  const refreshCloudStatus = () => {
+    const configured = getSupabaseConfig().isConfigured;
+    setIsCloudConnected(configured);
+    return configured;
+  };
 
   // Sync with active Supabase session & listen to auth state changes
   useEffect(() => {
@@ -136,6 +145,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function syncActiveSession() {
       try {
+        const config = getSupabaseConfig();
+        setIsCloudConnected(config.isConfigured);
+
+        if (!config.isConfigured) return;
+
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.warn('Supabase getSession notice:', error.message);
@@ -189,11 +203,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Login ────────────────────────────────────────────────────────────────
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // 1. Try active Supabase login if configured
-    if (isSupabaseConfigured) {
+    const cloudActive = getSupabaseConfig().isConfigured;
+
+    // 1. Try active Supabase cloud login if configured
+    if (cloudActive) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            return {
+              success: false,
+              error: 'Email not confirmed yet! Please click the verification link sent to your inbox, or disable "Confirm email" in your Supabase Auth settings to log in immediately.',
+            };
+          }
           if (email.toLowerCase() !== DEMO_ACCOUNT.email.toLowerCase()) {
             return { success: false, error: error.message };
           }
@@ -219,7 +241,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const users = getRegisteredUsers();
     const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-    if (!found) return { success: false, error: 'No account found with this email.' };
+    if (!found) {
+      return { 
+        success: false, 
+        error: cloudActive 
+          ? 'Invalid email or password.'
+          : 'No account found on this device. (Note: Without cloud database connected, accounts stay only on the device where they were created. Click "Connect Cloud" above to enable cross-device login).' 
+      };
+    }
     if (found.passwordHash && found.passwordHash !== fakeHash(password)) {
       return { success: false, error: 'Incorrect password.' };
     }
@@ -230,8 +259,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Signup ───────────────────────────────────────────────────────────────
   const signup = async (data: SignupData): Promise<{ success: boolean; error?: string }> => {
+    const cloudActive = getSupabaseConfig().isConfigured;
+
     // 1. Try Supabase Auth sign up if configured
-    if (isSupabaseConfigured) {
+    if (cloudActive) {
       try {
         const { data: sbData, error } = await supabase.auth.signUp({
           email: data.email,
@@ -271,14 +302,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // 2. Local fallback registration
+    // 2. Local fallback registration (when cloud is not yet connected)
     await new Promise(r => setTimeout(r, 500));
     const users = getRegisteredUsers();
     if (users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) {
-      return { success: false, error: 'An account with this email already exists.' };
+      return { success: false, error: 'An account with this email already exists on this device.' };
     }
     if (users.find(u => u.profile.username.toLowerCase() === data.username.toLowerCase())) {
-      return { success: false, error: 'This username is already taken.' };
+      return { success: false, error: 'This username is already taken on this device.' };
     }
 
     const newProfile: User = {
@@ -320,7 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Logout ───────────────────────────────────────────────────────────────
   const logout = async () => {
     try {
-      if (isSupabaseConfigured) {
+      if (getSupabaseConfig().isConfigured) {
         await supabase.auth.signOut();
       }
     } catch (err) {
@@ -349,6 +380,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{
       isAuthenticated: !!authUser,
+      isCloudConnected,
       authUser,
       currentUserProfile: authUser?.profile ?? null,
       user: authUser?.profile ?? null,
@@ -356,6 +388,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signup,
       logout,
       updateAuthProfile,
+      refreshCloudStatus,
     }}>
       {children}
     </AuthContext.Provider>
